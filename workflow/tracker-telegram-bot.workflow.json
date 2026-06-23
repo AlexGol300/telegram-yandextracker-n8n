@@ -1,0 +1,2557 @@
+{
+  "name": "PEn09-2. Привязка CRM к ИИ-сценариям: автоматизация клиентских процессов copy",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -3456,
+        4160
+      ],
+      "id": "838f4ee5-9300-4415-b9ab-f736e931d4b2",
+      "name": "1. TG / Входящее сообщение",
+      "webhookId": "8375bcdd-228d-40a5-8deb-acbbb72130f0",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "IDMAt2eMwpJLuXFe",
+          "mode": "list",
+          "cachedResultName": "context_command_table",
+          "cachedResultUrl": "/projects/oTYDoEYniFi1qnfX/datatables/IDMAt2eMwpJLuXFe"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chatid",
+              "keyValue": "={{ $json.message.chat.id }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -3280,
+        4160
+      ],
+      "id": "19395db8-db04-44bd-8ef0-2221ee459ea6",
+      "name": "2. DB / context",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3a86f48-0529-40de-93d0-844440a28ccd",
+              "name": "command",
+              "value": "={{ \n  $node[\"1. TG / Входящее сообщение\"].json.message.text?.startsWith('/') \n    ? $node[\"1. TG / Входящее сообщение\"].json.message.text.split(' ')[0].replace('/', '')\n    : ['start','list','newtask','updatetask','cancel'].includes($node[\"1. TG / Входящее сообщение\"].json.message.text?.trim())\n      ? $node[\"1. TG / Входящее сообщение\"].json.message.text.trim()\n      : ''\n}}",
+              "type": "string"
+            },
+            {
+              "id": "84e20a93-a664-4d81-be5d-f2d2f75c37cb",
+              "name": "messagecontent",
+              "value": "={{ $node[\"1. TG / Входящее сообщение\"].json.message.text?.startsWith('/') ? $node[\"1. TG / Входящее сообщение\"].json.message.text.split(' ').slice(1).join(' ') : $node[\"1. TG / Входящее сообщение\"].json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "16e0b88d-c061-4529-a38d-6515ce832775",
+              "name": "chatid",
+              "value": "={{ $node[\"1. TG / Входящее сообщение\"].json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "287c96ff-bd2a-4c88-8f1a-5685f1ac5d15",
+              "name": "contextcommand",
+              "value": "={{ $node[\"2. DB / context\"].json.command ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "24f8bd0e-4bf8-4246-8e32-62b7e571e5e9",
+              "name": "contextstep",
+              "value": "={{ $node[\"2. DB / context\"].json.step ?? '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3104,
+        4160
+      ],
+      "id": "9e269f35-1359-436e-98ef-580355669c5e",
+      "name": "3. MSG / Разбор команды"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f1964702-3f16-46a2-a6cc-6a02553fb990",
+              "leftValue": "={{ $json.command }}",
+              "rightValue": "cancel",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2928,
+        4160
+      ],
+      "id": "667a4c3e-c66d-4edd-8a8b-50ec4dff1065",
+      "name": "4. IF / cancel?"
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "IDMAt2eMwpJLuXFe",
+          "mode": "list",
+          "cachedResultName": "context_command_table",
+          "cachedResultUrl": "/projects/oTYDoEYniFi1qnfX/datatables/IDMAt2eMwpJLuXFe"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chatid",
+              "keyValue": "={{ $node[\"3. MSG / Разбор команды\"].json.chatid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -2704,
+        3872
+      ],
+      "id": "e56468cf-fcc4-4b19-a052-b6dff1343cfc",
+      "name": "4a. DB / context delete",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"3. MSG / Разбор команды\"].json.chatid }}",
+        "text": "Операция отменена",
+        "additionalFields": {
+          "appendAttribution": true
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2496,
+        3872
+      ],
+      "id": "13941edd-c22d-4fb4-b3dc-2a8a518b47c7",
+      "name": "4b. TG / cancel",
+      "webhookId": "0bd8165d-5dbe-4873-814b-6630719197aa",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "73deade2-4323-48a0-ba8a-173f9ddc449c",
+              "leftValue": "={{ $json.command }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2688,
+        4480
+      ],
+      "id": "74136b99-b54e-4da8-905a-4be90341bc22",
+      "name": "5. IF / есть команда?"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"3. MSG / Разбор команды\"].json.chatid }}",
+        "text": "Доступные команды: newtask, list, updatetask, cancel",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1904,
+        4160
+      ],
+      "id": "49551397-fd9a-406f-a131-4fb4678b4066",
+      "name": "7. TG / start",
+      "webhookId": "e44fb0ef-f82d-4640-8754-2bdabac20956",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3cf4f898-9a5d-4517-952c-fc4d17ded06f"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "start"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e9bfa67d-779a-4e21-ae84-d2b9de3647fc",
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "list",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "list"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "44fd6606-6970-48fe-a0fc-f12622951d9e",
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "newtask",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "newtask"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ead96ebb-5ff0-41b3-8cb3-f80e1eca6ad7",
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "updatetask",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "updatetask"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -2352,
+        4432
+      ],
+      "id": "afbccf79-5e6b-44f4-9fbe-682fc500c071",
+      "name": "6. ROUTER / по команде"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "jNkxTTFnaiYfnTnT",
+          "mode": "list",
+          "cachedResultName": "Task_Table",
+          "cachedResultUrl": "/projects/oTYDoEYniFi1qnfX/datatables/jNkxTTFnaiYfnTnT"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chatid",
+              "keyValue": "={{ $node[\"3. MSG / Разбор команды\"].json.chatid }}"
+            },
+            {
+              "keyName": "Finished",
+              "condition": "isFalse"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1904,
+        4336
+      ],
+      "id": "3465a280-f6b7-4a40-8f36-34a5877351e4",
+      "name": "8. DB / TaskTable active",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawItems = $input.all();\nconst items = rawItems.filter(item => item.json.TaskContent);\n\nif (items.length === 0) {\n  return [\n    {\n      json: {\n        message: 'Активных задач нет.',\n      },\n    },\n  ];\n}\n\nconst lines = items.map(item => {\n  const t = item.json;\n  const deadline = t.DeadlineAt\n    ? new Date(t.DeadlineAt).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })\n    : 'без дедлайна';\n  const tracker = t.Tracker_Key ? ` (Tracker: ${t.Tracker_Key})` : '';\n  return `TASK-${t.id}: ${t.TaskContent} (дедлайн: ${deadline})${tracker}`;\n});\n\nreturn [\n  {\n    json: {\n      message: lines.join('\\n'),\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1728,
+        4336
+      ],
+      "id": "b162cd74-7ef7-4eed-b8ba-b478116510b2",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"3. MSG / Разбор команды\"].json.chatid }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1536,
+        4336
+      ],
+      "id": "a7dcfb17-c570-4de6-8608-c8a7d9d1b0b2",
+      "name": "10. TG / list",
+      "webhookId": "4037fb95-c93f-49fe-a0cf-e8595f772a2d",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"3. MSG / Разбор команды\"].json.chatid }}",
+        "text": "Отправьте задачу и дедлайн одним сообщением. Пример: позвонить клиенту 28 июня в 10:00. Для отмены — cancel.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1904,
+        4480
+      ],
+      "id": "aa3dec6c-0857-4529-bccd-7250d43e1e34",
+      "name": "11. TG / newtask prompt",
+      "webhookId": "f8a96ef9-ebe6-4c47-87b6-e05eddeb7602",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "IDMAt2eMwpJLuXFe",
+          "mode": "list",
+          "cachedResultName": "context_command_table",
+          "cachedResultUrl": "/projects/oTYDoEYniFi1qnfX/datatables/IDMAt2eMwpJLuXFe"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chatid",
+              "keyValue": "={{ $node[\"3. MSG / Разбор команды\"].json.chatid }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chatid": "={{ $node[\"3. MSG / Разбор команды\"].json.chatid }}",
+            "command": "newtask",
+            "step": "wait_newtask_payload",
+            "draft_deadlineat": "''",
+            "draft_taskid": "''",
+            "draft_action": "''",
+            "updated_at": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chatid",
+              "displayName": "chatid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "command",
+              "displayName": "command",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "step",
+              "displayName": "step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "draft_taskcontent",
+              "displayName": "draft_taskcontent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "draft_deadlineat",
+              "displayName": "draft_deadlineat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "draft_taskid",
+              "displayName": "draft_taskid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "draft_action",
+              "displayName": "draft_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1728,
+        4480
+      ],
+      "id": "c1cc61ef-01a5-4bd9-8f4f-c06c7420f367",
+      "name": "12. DB / context newtask"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0b69e01f-a4ab-4ce6-a60b-752821132517",
+              "leftValue": "={{ $json.contextcommand }}",
+              "rightValue": "newtask",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "f988a5b5-56b2-4d38-a100-8c94334d468f",
+              "leftValue": "={{ $json.contextstep }}",
+              "rightValue": "wait_newtask_payload",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2368,
+        4944
+      ],
+      "id": "5b571420-b487-466a-b2c4-fcd64eefddad",
+      "name": "13. IF / ждем payload newtask?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "85f78262-4a2a-4162-8bfd-6e07789ea31c",
+              "name": "chatid",
+              "value": "={{ $json.chatid }}",
+              "type": "string"
+            },
+            {
+              "id": "db31baef-c427-486a-a91e-ead719af4be2",
+              "name": "source_text",
+              "value": "={{ $json.messagecontent }}",
+              "type": "string"
+            },
+            {
+              "id": "26086eaa-adac-4969-bceb-36c59a603be8",
+              "name": "command",
+              "value": "newtask",
+              "type": "string"
+            },
+            {
+              "id": "760d39e7-10a4-4f47-ba92-72ab534c0d27",
+              "name": "step",
+              "value": "={{ $json.contextstep }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2176,
+        4832
+      ],
+      "id": "8042f3e8-95b3-4092-94b1-b21ec8070ae1",
+      "name": "14. MSG / payload newtask"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.source_text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Разбери сообщение пользователя на структурированные поля для создания задачи.\nВерни только структурированный результат.\n\nПравила:\n1. task_content — краткий текст задачи без даты и времени.\n2. deadline_at — дедлайн в формате ISO 8601 с московским временем UTC+3.\n3. Если дедлайн в сообщении не найден или он неоднозначный, верни deadline_at = \"\".\n4. Если дедлайн не найден или неоднозначен, верни needs_clarification = true.\n5. Если дедлайн понятен, верни needs_clarification = false.\n6. Если needs_clarification = true, заполни clarification_question коротким уточняющим вопросом для Telegram.\n7. Если needs_clarification = false, верни clarification_question = \"\".\n8. Ничего не выдумывай. Если информации не хватает — не угадывай.\n9. Текущая дата для интерпретации: 2026-06-18.\n10. Часовой пояс: Europe/Moscow.\n11. deadline_at всегда возвращай в формате YYYY-MM-DDTHH:mm:ss.000+03:00.\n12. Если clarification_question не нужна, верни пустую строку \"\", а не слово empty и не null."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -2000,
+        4832
+      ],
+      "id": "2e0d7e6c-4b4f-4b4b-bf7a-a7cac9f40d7f",
+      "name": "15. AI / parse newtask payload"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -2000,
+        5008
+      ],
+      "id": "98a24138-497a-4126-9d63-ac58eb1a01a9",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "KNNMHP3PAf7xcGbU",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"task_content\": \"позвонить клиенту\",\n  \"deadline_at\": \"2026-06-19T01:01:00.000+03:00\",\n  \"needs_clarification\": false,\n  \"clarification_question\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -1856,
+        5008
+      ],
+      "id": "a819e83e-4883-4224-bd9c-254274093d17",
+      "name": "15a. Parser / newtask schema"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "76224278-7358-4539-a1ff-95dd8d130447",
+              "leftValue": "={{ $json.output.task_content }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1696,
+        4832
+      ],
+      "id": "2f9466df-e70e-498e-8182-4750f7a40558",
+      "name": "16. IF / task_content найден?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "70fb1369-9a9d-41eb-a018-402489cb5bd0",
+              "leftValue": "{{ $json.output.deadline_at }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1472,
+        4752
+      ],
+      "id": "d92eb195-51c4-4ddf-960e-fa1a65c3fd50",
+      "name": "17. IF / deadline_at найден?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tracker.yandex.net/v3/issues",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "OAuth y0__wgBEP68xQgYsqhDIIjX5u8XUqH27RY4gvi0fq1a2JDhpFgRX7s"
+            },
+            {
+              "name": "X-Cloud-Org-ID",
+              "value": "bpfp7jer1q4lci9vd2j5"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "queue",
+              "value": "RAZVITIE"
+            },
+            {
+              "name": "summary",
+              "value": "={{ $json.output.task_content }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $json.output.task_content }}"
+            },
+            {
+              "name": "deadline",
+              "value": "={{ $json.output.deadline_at }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1248,
+        4736
+      ],
+      "id": "5d01a831-6180-48a1-9aa2-c354fba2e780",
+      "name": "18. Tracker / create issue"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "jNkxTTFnaiYfnTnT",
+          "mode": "list",
+          "cachedResultName": "Task_Table",
+          "cachedResultUrl": "/projects/oTYDoEYniFi1qnfX/datatables/jNkxTTFnaiYfnTnT"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Finished": false,
+            "notified": false,
+            "chatid": "={{ $node[\"14. MSG / payload newtask\"].json.chatid }}",
+            "TaskContent": "={{ $node[\"15. AI / parse newtask payload\"].json.output.task_content }}",
+            "DeadlineAt": "={{ $node[\"15. AI / parse newtask payload\"].json.output.deadline_at }}",
+            "Tracker_Task_ID": "={{ $node[\"18. Tracker / create issue\"].json.id }}",
+            "Tracker_Key": "={{ $node[\"18. Tracker / create issue\"].json.key }}",
+            "LastSyncStatus": "created"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chatid",
+              "displayName": "chatid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "TaskContent",
+              "displayName": "TaskContent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "DeadlineAt",
+              "displayName": "DeadlineAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Finished",
+              "displayName": "Finished",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "notified",
+              "displayName": "notified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tracker_Task_ID",
+              "displayName": "Tracker_Task_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tracker_Key",
+              "displayName": "Tracker_Key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "LastSyncStatus",
+              "displayName": "LastSyncStatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1056,
+        4736
+      ],
+      "id": "5eeba39a-9f6c-49c1-828c-9955e92010d2",
+      "name": "19. DB / TaskTable insert"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatid }}",
+        "text": "=TASK-{{ $json.id }} создана. Tracker: {{ $json.Tracker_Key }}. Дедлайн: {{ new Date($json.DeadlineAt).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }) }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -848,
+        4736
+      ],
+      "id": "91c7571e-65db-4ed7-a22d-e62732a828d6",
+      "name": "20. TG / newtask OK",
+      "webhookId": "eee430b3-f0c5-46ee-b7df-bd8e3c090465",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "IDMAt2eMwpJLuXFe",
+          "mode": "list",
+          "cachedResultName": "context_command_table",
+          "cachedResultUrl": "/projects/oTYDoEYniFi1qnfX/datatables/IDMAt2eMwpJLuXFe"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chatid",
+              "keyValue": "={{ $node[\"19. DB / TaskTable insert\"].json.chatid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -640,
+        4736
+      ],
+      "id": "882c217b-734f-46b6-b599-f4df0589b5f0",
+      "name": "21. DB / context clear after newtask"
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json.chatid}}",
+        "text": "Отправьте изменение одной строкой. Примеры: TASK-5 finish; TASK-5 changedeadline 2026-06-30T12:00:00.000+03:00; TASK-5 remove. Для отмены: cancel.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1904,
+        4624
+      ],
+      "id": "93256c9a-b503-4714-bde6-05944eccd67f",
+      "name": "22. TG updatetask / инструкция",
+      "webhookId": "451aa6b5-3c60-41cf-b3df-056ef34a3381",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "IDMAt2eMwpJLuXFe",
+          "mode": "list",
+          "cachedResultName": "context_command_table",
+          "cachedResultUrl": "/projects/oTYDoEYniFi1qnfX/datatables/IDMAt2eMwpJLuXFe"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chatid",
+              "keyValue": "={{$node[\"3. MSG / Разбор команды\"].json.chatid}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chatid": "={{$node[\"3. MSG / Разбор команды\"].json.chatid}}",
+            "command": "updatetask",
+            "step": "wait_updatetask_payload",
+            "draft_taskcontent": "''",
+            "draft_deadlineat": "''",
+            "draft_taskid": "''",
+            "draft_action": "''",
+            "updated_at": "={{$now}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chatid",
+              "displayName": "chatid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "command",
+              "displayName": "command",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "step",
+              "displayName": "step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "draft_taskcontent",
+              "displayName": "draft_taskcontent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "draft_deadlineat",
+              "displayName": "draft_deadlineat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "draft_taskid",
+              "displayName": "draft_taskid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "draft_action",
+              "displayName": "draft_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1728,
+        4624
+      ],
+      "id": "c59d8db1-d315-4429-be0d-7dcece5f6605",
+      "name": "23. DB / context updatetask"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bbb1babd-133a-42df-974d-fdd120b77f42",
+              "leftValue": "{{ $json.contextcommand }}",
+              "rightValue": "updatetask",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "e0ba0b5b-0e6f-4d6f-a835-702cd0fa3992",
+              "leftValue": "{{ $json.contextstep }}",
+              "rightValue": "wait_updatetask_payload",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2192,
+        5312
+      ],
+      "id": "d437c5de-a869-4ac0-9f5c-c5e7264ae2f1",
+      "name": "24. IF / ждем payload updatetask?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50464d6f-4a1a-4496-8e49-3f43f82146b2",
+              "name": "chatid",
+              "value": "={{ $json.chatid }}",
+              "type": "string"
+            },
+            {
+              "id": "7a82284d-3896-4cf1-a763-48072343304a",
+              "name": "sourcetext",
+              "value": "={{ $json.messagecontent }}",
+              "type": "string"
+            },
+            {
+              "id": "e84f6077-6dab-4fc1-8af3-a6c5fb58fb92",
+              "name": "command",
+              "value": "updatetask",
+              "type": "string"
+            },
+            {
+              "id": "81d58883-7300-49cf-baa8-4a06c2fdf68c",
+              "name": "step",
+              "value": "={{ $json.contextstep }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1984,
+        5456
+      ],
+      "id": "4446ad94-4302-4579-acdf-3f8db2069e56",
+      "name": "25. MSG / payload updatetask"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.sourcetext }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Разбери сообщение пользователя на структурированные поля для обновления задачи. Верни только структурированный результат.  Правила: 1. taskid — это внутренний ID задачи из TaskTable. 2. Если пользователь пишет TASK-5, верни taskid = \"5\". 3. action — только одно из значений: finish, changedeadline, remove. 4. deadlineat заполняй только если action = changedeadline. 5. deadlineat всегда возвращай в формате ISO 8601 с московским временем UTC+3. 6. Формат deadlineat: YYYY-MM-DDTHH:mm:ss.000+03:00. 7. Если action не changedeadline, верни deadlineat = \"\". 8. Если taskid не найден, верни taskid = \"\". 9. Если action не распознан, верни action = \"\". 10. Ничего не выдумывай. 11. Текущая дата для интерпретации: 2026-06-18. 12. Часовой пояс: Europe/Moscow."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -1792,
+        5456
+      ],
+      "id": "f76dd4b6-d901-47b1-848d-f97c37309a9a",
+      "name": "26. AI / parse updatetask payload"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1792,
+        5616
+      ],
+      "id": "50a3fe9b-0196-40b5-8e03-1d88a7a4e3eb",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "KNNMHP3PAf7xcGbU",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"taskid\": \"5\",\n  \"action\": \"finish\",\n  \"deadlineat\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -1648,
+        5616
+      ],
+      "id": "355c459a-e1ee-45f7-82e7-099c13f7a1a3",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8a377d0f-93c1-4601-aa14-4ab2eab0a409",
+              "leftValue": "={{$json.output.taskid}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1440,
+        5456
+      ],
+      "id": "e3d3af3d-72a8-42d3-9a15-4a91f251c52e",
+      "name": "27. IF / taskid найден?"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "jNkxTTFnaiYfnTnT",
+          "mode": "list",
+          "cachedResultName": "Task_Table",
+          "cachedResultUrl": "/projects/oTYDoEYniFi1qnfX/datatables/jNkxTTFnaiYfnTnT"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ Number($node[\"26. AI / parse updatetask payload\"].json.output.taskid) }}"
+            },
+            {
+              "keyName": "chatid",
+              "keyValue": "={{ Number($node[\"25. MSG / payload updatetask\"].json.chatid) }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1232,
+        5360
+      ],
+      "id": "c85db26a-73a3-46e0-a2a1-6cf504fa961f",
+      "name": "28. DB / TaskTable get by id",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1de65d95-90b3-4938-9234-e82aa2efeb5b",
+              "leftValue": "={{$json.id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1024,
+        5360
+      ],
+      "id": "edee2ef7-27ed-41c6-865f-625ab40931f4",
+      "name": "29. IF / задача найдена в TaskTable?"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$node[\"26. AI / parse updatetask payload\"].json.output.action}}",
+                    "rightValue": "finish",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "34e856fd-bc71-4668-9006-3e18ebbd704e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "finish"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fdde9ae2-c033-41cd-afc4-df10892b9810",
+                    "leftValue": "={{$node[\"26. AI / parse updatetask payload\"].json.output.action}}",
+                    "rightValue": "changedeadline",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "changedeadline"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "366f36d5-42f4-4ad6-9ee7-1b1911d9e95c",
+                    "leftValue": "={{$node[\"26. AI / parse updatetask payload\"].json.output.action}}",
+                    "rightValue": "remove",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "remove"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -752,
+        5232
+      ],
+      "id": "6ecb5fb6-e8e7-4c7a-b75d-a49e231d19a6",
+      "name": "30. ROUTER / action updatetask",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatid }}",
+        "text": "={{ 'Не понял действие для TASK-' + $json.output.taskid + '. Можно: finish, changedeadline, remove. Напиши, например: \"TASK-' + $json.output.taskid + ' finish\" или \"TASK-' + $json.output.taskid + ' changedeadline 2026-06-30T12:00:00.000+03:00\".' }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -512,
+        5600
+      ],
+      "id": "e840278a-4cb1-4092-ab8c-3f125eea1527",
+      "name": "31. TG / updatetask invalid action",
+      "webhookId": "1d15cbd1-a188-443f-ad35-b4246e9bfae5",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.tracker.yandex.net/v3/issues/{{ $json.Tracker_Task_ID }}/transitions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "OAuth y0__wgBEP68xQgYsqhDIIjX5u8XUqH27RY4gvi0fq1a2JDhpFgRX7s"
+            },
+            {
+              "name": "X-Cloud-Org-ID",
+              "value": "bpfp7jer1q4lci9vd2j5"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -480,
+        4992
+      ],
+      "id": "96c22fc5-6320-4e9e-8c37-bcf702dc2e6d",
+      "name": "32. Tracker / get transitions finish"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6c5bd738-bbc7-402b-be6f-9da4dbb0139b",
+              "leftValue": "={{ ($json.id || '').toLowerCase() }}",
+              "rightValue": "close",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "a82c9efa-4806-451e-a124-a0d639c65131",
+              "leftValue": "={{ ($json.id || '').toLowerCase() }}",
+              "rightValue": "resolve",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "359f90d9-ad34-4d6f-bbb7-b279f649e974",
+              "leftValue": "={{ ($json.to?.display || '').toLowerCase() }}",
+              "rightValue": "заверш",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -240,
+        4992
+      ],
+      "id": "cb47eb52-a3a2-449b-8589-10a7cdad1bc2",
+      "name": "33. IF / это finish transition?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.tracker.yandex.net/v3/issues/{{ $node[\"29. IF / задача найдена в TaskTable?\"].json.Tracker_Key }}/transitions/{{ $json.id }}/_execute",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "OAuth y0__wgBEP68xQgYsqhDIIjX5u8XUqH27RY4gvi0fq1a2JDhpFgRX7s"
+            },
+            {
+              "name": "X-Cloud-Org-ID",
+              "value": "bpfp7jer1q4lci9vd2j5"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "resolution",
+              "value": "fixed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        4912
+      ],
+      "id": "8eecf0b5-07a9-48da-9a57-e9cc466c70e0",
+      "name": "34. Tracker / finish issue"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "jNkxTTFnaiYfnTnT",
+          "mode": "list",
+          "cachedResultName": "Task_Table",
+          "cachedResultUrl": "/projects/oTYDoEYniFi1qnfX/datatables/jNkxTTFnaiYfnTnT"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $(\"29. IF / задача найдена в TaskTable?\").first().json.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Finished": true,
+            "LastSyncStatus": "finished"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chatid",
+              "displayName": "chatid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "TaskContent",
+              "displayName": "TaskContent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "DeadlineAt",
+              "displayName": "DeadlineAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Finished",
+              "displayName": "Finished",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "notified",
+              "displayName": "notified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Tracker_Task_ID",
+              "displayName": "Tracker_Task_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Tracker_Key",
+              "displayName": "Tracker_Key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "LastSyncStatus",
+              "displayName": "LastSyncStatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        4912
+      ],
+      "id": "dfe80c94-d094-46e7-8aa7-1444621fb0a9",
+      "name": "35. DB / TaskTable mark finished"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [items[0]];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        4912
+      ],
+      "id": "91bbb8f5-8e92-410a-94f9-387005dc6c3a",
+      "name": "36. CODE / first item finish ok"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatid }}",
+        "text": "={{ 'Задача TASK-' + $json.id + ' успешно завершена: ' + $json.TaskContent }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        576,
+        4912
+      ],
+      "id": "6391c546-c5d0-4435-9aae-9c42e6181e1f",
+      "name": "37. TG / finish OK",
+      "webhookId": "9026c036-5429-470f-a65a-27ae66604f5a",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"29. IF / задача найдена в TaskTable?\").first().json.chatid }}",
+        "text": "={{ 'Задача TASK-' + $(\"29. IF / задача найдена в TaskTable?\").first().json.id + ' уже завершена или недоступен переход finish.' }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        5088
+      ],
+      "id": "f3ccb5d3-b97f-4349-b089-2e916323aa1f",
+      "name": "39. TG / already finished",
+      "webhookId": "f7fc1b5a-852a-4ede-8e10-08ff4e59292c",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [items[0]];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        5088
+      ],
+      "id": "4c4ef9d0-a3af-42a0-8c10-a9d71a882bcc",
+      "name": "38. CODE / first item already finished"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [items[0]];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        5200
+      ],
+      "id": "d8e609e9-ae77-4525-a287-715c6c1fdcfd",
+      "name": "40. CODE / first item changedeadline unavailable"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"29. IF / задача найдена в TaskTable?\").first().json.chatid }}",
+        "text": "={{ 'Задача TASK-' + $(\"29. IF / задача найдена в TaskTable?\").first().json.id + ' уже завершена или сейчас нельзя изменить дедлайн.' }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -272,
+        5200
+      ],
+      "id": "6d5340d2-6853-4b60-a6f0-9bba4d4fcc89",
+      "name": "41. TG / changedeadline unavailable",
+      "webhookId": "7a285b58-6e0d-4154-bb44-a7319be1495d",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [items[0]];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        5392
+      ],
+      "id": "9ee6935c-5639-493c-bf45-d399c94a8630",
+      "name": "42. CODE / first item remove unavailable"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"29. IF / задача найдена в TaskTable?\").first().json.chatid }}",
+        "text": "={{ 'Задача TASK-' + $(\"29. IF / задача найдена в TaskTable?\").first().json.id + ' уже завершена или сейчас нельзя удалить задачу.' }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -256,
+        5392
+      ],
+      "id": "f4318180-2f7d-4ca8-b6ca-5d9b4ca036b1",
+      "name": "43. TG / remove unavailable",
+      "webhookId": "7a285b58-6e0d-4154-bb44-a7319be1495d",
+      "credentials": {
+        "telegramApi": {
+          "id": "5wIHJKIjIFXAWkxo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🚫 NOTE: Cancel scope\n\nEN: /cancel deletes only context_command_table row for this chatid.\n    Task_Table is NOT changed. Yandex Tracker is NOT changed.\n\nRU: /cancel удаляет только строку в context_command_table для этого chatid.\n    Task_Table НЕ меняется. Yandex Tracker НЕ меняется.",
+        "height": 224,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2752,
+        3632
+      ],
+      "id": "6a7cee03-7b29-47fc-9f7a-f88530ad5aa7",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 📥 NOTE: Input & context read\n\nEN: Read incoming message, load dialog context from context_command_table.\n    No data is written here. Output: command, chatid, context_command, context_step.\n\nRU: Читаем входящее сообщение, загружаем контекст диалога из context_command_table.\n    Здесь ничего не записывается. На выходе: command, chatid, context_command, context_step.",
+        "height": 224,
+        "width": 448
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3456,
+        3920
+      ],
+      "id": "5611b5e8-fbde-4f95-a329-3e27fe858b1f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## ⚠️ NOTE: Write order — newtask\n\nEN: STRICT ORDER: 1) Create in Yandex Tracker → get id and key.\n    2) Save row in Task_Table with Tracker_Task_ID and Tracker_Key from step 1.\n    3) Only then reply to user in Telegram.\n    If order is swapped → Task_Table may have no Tracker link → desync.\n\nRU: СТРОГИЙ ПОРЯДОК: 1) Создать задачу в Yandex Tracker → получить id и key.\n    2) Записать строку в Task_Table с Tracker_Task_ID и Tracker_Key из шага 1.\n    3) Только после этого отвечать пользователю в Telegram.\n    Если порядок нарушен → Task_Table окажется без ссылки на Tracker → рассинхронизация.",
+        "height": 256,
+        "width": 608
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        4464
+      ],
+      "id": "9ffb328c-fcd3-4b85-8e6e-cbf14d1f88d1",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## ⚠️ NOTE: Write order — updatetask\n\nEN: STRICT ORDER: 1) Update in Yandex Tracker (finish / changedeadline / remove).\n    2) Update or delete row in Task_Table.\n    3) Only then reply to user in Telegram.\n    If Tracker_Task_ID is empty → skip Tracker, update Task_Table only (local-only path).\n\nRU: СТРОГИЙ ПОРЯДОК: 1) Изменить задачу в Yandex Tracker (finish / changedeadline / remove).\n    2) Обновить или удалить строку в Task_Table.\n    3) Только после этого отвечать пользователю в Telegram.\n    Если Tracker_Task_ID пустой → Tracker пропускаем, меняем только Task_Table (local-only путь).",
+        "height": 256,
+        "width": 624
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        4640
+      ],
+      "id": "4959545f-6bc9-4c68-b4aa-a493436f03f9",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 🔀 NOTE: Routing logic\n\nEN: If command is not empty → new command → ROUTER by command (start/list/newtask/updatetask).\n    If command is empty but context_command is not empty → continuation → ROUTER by context.\n    Fallback = unknown input, reply with hint.\n\nRU: Если command не пустой → новая команда → ROUTER по команде (start/list/newtask/updatetask).\n    Если command пустой, но context_command не пустой → продолжение сценария → ROUTER по контексту.\n    Fallback = неизвестный ввод, отвечаем подсказкой.",
+        "height": 256,
+        "width": 528
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2720,
+        4176
+      ],
+      "id": "0e70373b-5752-4b24-8dbe-8fd3d95c2c4b",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## 🔑 NOTE: Three different IDs\n\nEN: id          — local row number in Task_Table (shown to user as TASK-5).\n    Tracker_Task_ID — internal Yandex object ID, e.g. 6a3189b62847bc5b0a77db15. Used in API URLs.\n    Tracker_Key — human-readable key, e.g. RAZVITIE-12. For display only, NOT for API calls.\n    Never substitute one for another.\n\nRU: id              — локальный номер строки в Task_Table (показываем пользователю как TASK-5).\n    Tracker_Task_ID — внутренний ID объекта в Яндексе, например 6a3189b62847bc5b0a77db15. Используется в URL API.\n    Tracker_Key     — человекочитаемый ключ, например RAZVITIE-12. Только для отображения, НЕ для вызовов API.\n    Никогда не подставлять один вместо другого.",
+        "height": 304,
+        "width": 672
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1184,
+        4912
+      ],
+      "id": "8162514e-dbcc-4948-895a-3f201187a020",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## 🕐 NOTE: Deadline format\n\nEN: LLM must convert any human input into ISO 8601 with Moscow time UTC+3.\n    Correct:   2026-06-28T10:00:00.000+03:00\n    Wrong:     2026-06-28  /  28 июня  /  tomorrow at 10\n    If time is not specified → use 09:00:00.000+03:00 as default.\n    Yandex Tracker rejects any other format.\n\nRU: LLM обязана конвертировать любой пользовательский ввод в ISO 8601 с московским временем UTC+3.\n    Правильно: 2026-06-28T10:00:00.000+03:00\n    Неправильно: 2026-06-28  /  28 июня  /  завтра в 10\n    Если время не указано → ставить по умолчанию 09:00:00.000+03:00.\n    Yandex Tracker отклонит любой другой формат.",
+        "height": 272,
+        "width": 688
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1984,
+        5152
+      ],
+      "id": "5304152a-dcca-4ac2-bf52-17e7f19eca9b",
+      "name": "Sticky Note6"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "1. TG / Входящее сообщение": {
+      "main": [
+        [
+          {
+            "node": "2. DB / context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. DB / context": {
+      "main": [
+        [
+          {
+            "node": "3. MSG / Разбор команды",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. MSG / Разбор команды": {
+      "main": [
+        [
+          {
+            "node": "4. IF / cancel?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. IF / cancel?": {
+      "main": [
+        [
+          {
+            "node": "4a. DB / context delete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5. IF / есть команда?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4a. DB / context delete": {
+      "main": [
+        [
+          {
+            "node": "4b. TG / cancel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. IF / есть команда?": {
+      "main": [
+        [
+          {
+            "node": "6. ROUTER / по команде",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "13. IF / ждем payload newtask?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. ROUTER / по команде": {
+      "main": [
+        [
+          {
+            "node": "7. TG / start",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "8. DB / TaskTable active",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "11. TG / newtask prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "22. TG updatetask / инструкция",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. DB / TaskTable active": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "10. TG / list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. TG / newtask prompt": {
+      "main": [
+        [
+          {
+            "node": "12. DB / context newtask",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13. IF / ждем payload newtask?": {
+      "main": [
+        [
+          {
+            "node": "14. MSG / payload newtask",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "24. IF / ждем payload updatetask?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14. MSG / payload newtask": {
+      "main": [
+        [
+          {
+            "node": "15. AI / parse newtask payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "15. AI / parse newtask payload",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15a. Parser / newtask schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "15. AI / parse newtask payload",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15. AI / parse newtask payload": {
+      "main": [
+        [
+          {
+            "node": "16. IF / task_content найден?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16. IF / task_content найден?": {
+      "main": [
+        [
+          {
+            "node": "17. IF / deadline_at найден?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17. IF / deadline_at найден?": {
+      "main": [
+        [
+          {
+            "node": "18. Tracker / create issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18. Tracker / create issue": {
+      "main": [
+        [
+          {
+            "node": "19. DB / TaskTable insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "19. DB / TaskTable insert": {
+      "main": [
+        [
+          {
+            "node": "20. TG / newtask OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "20. TG / newtask OK": {
+      "main": [
+        [
+          {
+            "node": "21. DB / context clear after newtask",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "21. DB / context clear after newtask": {
+      "main": [
+        []
+      ]
+    },
+    "22. TG updatetask / инструкция": {
+      "main": [
+        [
+          {
+            "node": "23. DB / context updatetask",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "24. IF / ждем payload updatetask?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "25. MSG / payload updatetask",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "25. MSG / payload updatetask": {
+      "main": [
+        [
+          {
+            "node": "26. AI / parse updatetask payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "26. AI / parse updatetask payload",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "26. AI / parse updatetask payload",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "26. AI / parse updatetask payload": {
+      "main": [
+        [
+          {
+            "node": "27. IF / taskid найден?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "27. IF / taskid найден?": {
+      "main": [
+        [
+          {
+            "node": "28. DB / TaskTable get by id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "28. DB / TaskTable get by id": {
+      "main": [
+        [
+          {
+            "node": "29. IF / задача найдена в TaskTable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "29. IF / задача найдена в TaskTable?": {
+      "main": [
+        [
+          {
+            "node": "30. ROUTER / action updatetask",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "30. ROUTER / action updatetask": {
+      "main": [
+        [
+          {
+            "node": "32. Tracker / get transitions finish",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "40. CODE / first item changedeadline unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "42. CODE / first item remove unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "31. TG / updatetask invalid action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "32. Tracker / get transitions finish": {
+      "main": [
+        [
+          {
+            "node": "33. IF / это finish transition?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "33. IF / это finish transition?": {
+      "main": [
+        [
+          {
+            "node": "34. Tracker / finish issue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "38. CODE / first item already finished",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "34. Tracker / finish issue": {
+      "main": [
+        [
+          {
+            "node": "35. DB / TaskTable mark finished",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "35. DB / TaskTable mark finished": {
+      "main": [
+        [
+          {
+            "node": "36. CODE / first item finish ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "36. CODE / first item finish ok": {
+      "main": [
+        [
+          {
+            "node": "37. TG / finish OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "38. CODE / first item already finished": {
+      "main": [
+        [
+          {
+            "node": "39. TG / already finished",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "40. CODE / first item changedeadline unavailable": {
+      "main": [
+        [
+          {
+            "node": "41. TG / changedeadline unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "42. CODE / first item remove unavailable": {
+      "main": [
+        [
+          {
+            "node": "43. TG / remove unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "95935ff3-c095-4e24-ae4d-ccf94d0f8a6c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c262c1f825d300fb2acc885c1cf8e8de7de3a3e3ae6cdd5035d672786fc6b71b"
+  },
+  "id": "jI3t6EEE79wbvUOl",
+  "tags": []
+}
